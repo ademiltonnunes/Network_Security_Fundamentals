@@ -6,7 +6,8 @@ import random
 class ServerApp:
     def show_menu(self):
         print("MENU")
-        print("1. ANSWER CLIENT")      
+        print("1. ANSWER CLIENT") 
+        print("2. QUIT -  Exit system")       
         print()
 
 def main() -> None:

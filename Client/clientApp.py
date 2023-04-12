@@ -71,9 +71,7 @@ def main() -> None:
                     else:
                         client.socket.close()
                         break 
-
-
-                elif command_number == 2:
+                elif command_number != 1:
                     client.socket.close()
                     break       
             except ValueError:
