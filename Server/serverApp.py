@@ -6,8 +6,7 @@ import random
 class ServerApp:
     def show_menu(self):
         print("MENU")
-        print("1. CONTACT CLIENT")
-        print("2. QUIT -  Exit system")        
+        print("1. ANSWER CLIENT")      
         print()
 
 def main() -> None:
@@ -28,53 +27,60 @@ def main() -> None:
                 
                 cipher = client_socket.recv(1024).decode()
 
-                #message got from client
-                print("Message got from client")
-                print(f"Encrypted message: {cipher}")
-                message_decrypted = rc4.decryption(cipher, key)
+                if cipher != '':
 
-                #Verify integrity 
-                split_message = message_decrypted.split(",")
-                message = split_message[0]
-                hash_message = split_message[1]
-                integrity:bool = md.verify_integrity(message, hash_message)
+                    #message got from client
+                    print("Message got from client")
+                    print(f"Encrypted message: {cipher}")
+                    message_decrypted = rc4.decryption(cipher, key)
 
-                if integrity:       
-                    # print the received message
-                    print(f"Client: {message}")
-                    print()
+                    #Verify integrity 
+                    split_message = message_decrypted.split(",")
+                    message = split_message[0]
+                    hash_message = split_message[1]
+                    print("Verifying Digital Signature")
+                    integrity:bool = md.verify_integrity(message, hash_message)
+                    
+
+                    if integrity:
+                        print("Message with integrity!")       
+                        # print the received message
+                        print(f"Client: {message}")
+                        print()
+                    else:
+                        print("Message has been tampered with!")
+                        client_socket.close()
+                        break
+
+                    app.show_menu()
+                    command_number: int = int(input("Please, enter a command number: "))
+                    if command_number == 1:
+
+                        #generate a random number                   
+                        random_num = random.randint(1, 10000)
+                        response = str(random_num)
+                        print(f"Random number: {response}")
+
+                        #generate hash
+                        hash = md.create_hash(response)
+
+                        #digital signature
+                        response_signed = response + ","+hash
+                        print("Message Signed!")
+
+                        #encryption
+                        response_cipher = rc4.encryption(response_signed, key)
+                        print(f"Encrypted: {response_cipher}")
+
+                        # send a message to the client                  
+                        client_socket.send(response_cipher.encode())
+                        print("Response sent!")
+                        print()  
+                    else:
+                        client_socket.close()
+                        break 
                 else:
-                    print("Message has been tampered with!")
-                    client_socket.close()
-                    break
-
-                app.show_menu()
-                command_number: int = int(input("Please, enter a command number: "))
-                if command_number == 1:
-
-                    #generate a random number                   
-                    random_num = random.randint(1, 10000)
-                    response = str(random_num)
-                    print(f"Random number: {response}")
-
-                    #generate hash
-                    hash = md.create_hash(response)
-
-                    #digital signature
-                    response_signed = response + ","+hash
-                    print("Message Signed!")
-
-                    #encryption
-                    response_cipher = rc4.encryption(response_signed, key)
-                    print(f"Encrypted: {response_cipher}")
-
-                    # send a message to the client                  
-                    client_socket.send(response_cipher.encode())
-                    print("Response sent!")
-                    print()
-                elif command_number == 2:
-                    client_socket.close()
-                    break                
+                    break           
             except ValueError:
                 print("Something went wrong in the connection.")
     else:

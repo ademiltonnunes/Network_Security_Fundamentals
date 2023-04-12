@@ -48,22 +48,30 @@ def main() -> None:
 
                     # receive data from the server
                     response_cipher = client.socket.recv(1024).decode()
-                    response_decrypted = rc4.decryption(response_cipher,key)
+                    if response_cipher !='':
+                        print("Message got from Server")
+                        print(f"Encrypted response: {response_cipher}")
+                        response_decrypted = rc4.decryption(response_cipher,key)
 
-                    #Verify integrity
-                    split_response = response_decrypted.split(",")
-                    response = split_response[0]
-                    hash_response = split_response[1]
-                    integrity:bool = md.verify_integrity(response, hash_response)
+                        #Verify integrity
+                        split_response = response_decrypted.split(",")
+                        response = split_response[0]
+                        hash_response = split_response[1]
+                        print("Verifying Digital Signature")
+                        integrity:bool = md.verify_integrity(response, hash_response)
 
-                    if integrity:
-                        print("Response.")
-                        print(f"Server: {response}") 
-                        print()  
+                        if integrity:
+                            print("Message with integrity!") 
+                            print(f"Server: {response}") 
+                            print()  
+                        else:
+                            print("Message has been tampered with!")
+                            client.socket.close()
+                            break
                     else:
-                        print("Message has been tampered with!")
                         client.socket.close()
-                        break
+                        break 
+
 
                 elif command_number == 2:
                     client.socket.close()
